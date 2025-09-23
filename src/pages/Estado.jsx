@@ -1,36 +1,72 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 export default function Estado() {
+  const [ingresos, setIngresos] = useState([]);
+  const CAPACIDAD_TOTAL = 60; // Dato ficticio
+
+  useEffect(() => {
+    const fetchIngresos = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:4000/api/ingresos");
+        setIngresos(data);
+      } catch (error) {
+        console.error("Error al obtener ingresos:", error);
+      }
+    };
+    fetchIngresos();
+  }, []);
+
+  // ---- Cálculos ----
+  const ocupados = ingresos.filter((i) => i.estado === "Activo").length;
+  const libres = CAPACIDAD_TOTAL - ocupados;
+
+  // Total de vehículos ingresados hoy
+  const hoy = new Date().toLocaleDateString();
+  const totalHoy = ingresos.filter((i) =>
+    new Date(i.horaEntrada).toLocaleDateString() === hoy
+  ).length;
+
+  // Últimos ingresos (ordenados y limitados)
+  const ultimos = [...ingresos]
+    .sort((a, b) => new Date(b.horaEntrada) - new Date(a.horaEntrada))
+    .slice(0, 5);
+
   return (
     <div className="space-y-8">
-      {/* Título de la sección */}
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">Estado general del parking</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-4">
+        Estado general del parking
+      </h1>
 
-      {/* Resumen rápido con mini cards */}
+      {/* Resumen rápido */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
           <span className="text-3xl">✅</span>
           <p className="mt-2 text-gray-500 text-sm">Lugares libres</p>
-          <p className="text-2xl font-bold text-green-500">45</p>
+          <p className="text-2xl font-bold text-green-500">{libres}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
           <span className="text-3xl">🚫</span>
           <p className="mt-2 text-gray-500 text-sm">Lugares ocupados</p>
-          <p className="text-2xl font-bold text-red-500">15</p>
+          <p className="text-2xl font-bold text-red-500">{ocupados}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
           <span className="text-3xl">🕒</span>
           <p className="mt-2 text-gray-500 text-sm">Últimos ingresos</p>
-          <p className="text-2xl font-bold text-indigo-600">8</p>
+          <p className="text-2xl font-bold text-indigo-600">{ultimos.length}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
           <span className="text-3xl">📋</span>
           <p className="mt-2 text-gray-500 text-sm">Vehículos totales hoy</p>
-          <p className="text-2xl font-bold text-gray-800">60</p>
+          <p className="text-2xl font-bold text-gray-800">{totalHoy}</p>
         </div>
       </div>
 
-      {/* Lista de vehículos recientes (placeholder) */}
+      {/* Tabla de últimos vehículos */}
       <div className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-500 mb-4">Últimos vehículos ingresados</h2>
+        <h2 className="text-lg font-semibold text-gray-500 mb-4">
+          Últimos vehículos ingresados
+        </h2>
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-200">
@@ -40,25 +76,32 @@ export default function Estado() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-2 text-gray-700">ABC-1234</td>
-              <td className="py-2 text-gray-700">08:15</td>
-              <td className="py-2 text-green-500 font-semibold">Libre</td>
-            </tr>
-            <tr className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-2 text-gray-700">XYZ-5678</td>
-              <td className="py-2 text-gray-700">08:45</td>
-              <td className="py-2 text-red-500 font-semibold">Ocupado</td>
-            </tr>
-            <tr className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-2 text-gray-700">LMN-9012</td>
-              <td className="py-2 text-gray-700">09:10</td>
-              <td className="py-2 text-green-500 font-semibold">Libre</td>
-            </tr>
+            {ultimos.map((item) => (
+              <tr
+                key={item._id}
+                className="border-b border-gray-100 hover:bg-gray-50"
+              >
+                <td className="py-2 text-gray-700">{item.patente}</td>
+                <td className="py-2 text-gray-700">
+                  {new Date(item.horaEntrada).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td
+                  className={`py-2 font-semibold ${
+                    item.estado === "Activo"
+                      ? "text-red-500"
+                      : "text-green-500"
+                  }`}
+                >
+                  {item.estado}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
-

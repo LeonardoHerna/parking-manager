@@ -3,6 +3,7 @@ import Estado from "../pages/Estado";
 import Ingresos from "../pages/Ingresos";
 import Reportes from "../pages/Reportes";
 import Configuracion from "../pages/Configuracion";
+import Clientes from "../pages/Clientes";
 
 export default function Dashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("Dashboard");
@@ -35,6 +36,8 @@ export default function Dashboard({ onLogout }) {
         return <Reportes />;
       case "Configuración":
         return <Configuracion />;
+      case "Clientes":
+        return <Clientes />
       default:
         return <Estado />;
     }
@@ -51,6 +54,7 @@ export default function Dashboard({ onLogout }) {
             { icon: "📊", label: "Estado" },
             { icon: "🚘", label: "Ingresos" },
             { icon: "📈", label: "Reportes" },
+             { icon: "👥", label: "Clientes" },
             { icon: "⚙️", label: "Configuración" },
           ].map((item) => (
             <button

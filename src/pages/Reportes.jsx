@@ -1,74 +1,94 @@
+import { useEffect, useState } from "react";
+import {
+  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from 'recharts';
+
 export default function Reportes() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch("http://localhost:4000/api/reportes/estadisticas");
+        const data = await res.json();
+        setStats(data);
+      } catch (error) {
+        console.error("Error cargando estadísticas", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
+
+  if (loading) return <p>Cargando...</p>;
+  if (!stats) return <p>No hay datos</p>;
+
   return (
     <div className="space-y-8">
-      {/* Título de la sección */}
       <h1 className="text-2xl font-bold text-gray-800 mb-4">Reportes y estadísticas</h1>
 
-      {/* Resumen de KPIs */}
+      {/* ---- KPIs ---- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
-          <span className="text-3xl">📊</span>
-          <p className="mt-2 text-gray-500 text-sm">Ingresos totales</p>
-          <p className="text-2xl font-bold text-green-500">$5,200</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
-          <span className="text-3xl">🚗</span>
-          <p className="mt-2 text-gray-500 text-sm">Vehículos diarios</p>
-          <p className="text-2xl font-bold text-indigo-600">220</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
-          <span className="text-3xl">🕒</span>
-          <p className="mt-2 text-gray-500 text-sm">Promedio por ticket</p>
-          <p className="text-2xl font-bold text-gray-800">$23.6</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
-          <span className="text-3xl">📈</span>
-          <p className="mt-2 text-gray-500 text-sm">Ocupación máxima</p>
-          <p className="text-2xl font-bold text-red-500">95%</p>
-        </div>
+        <Card icon="📊" label="Ingresos totales" value={`$${stats.totalIngresos}`} color="text-green-500" />
+        <Card icon="🚗" label="Vehículos diarios" value={stats.vehiculosHoy} color="text-indigo-600" />
+        <Card icon="🕒" label="Promedio por ticket" value={`$${stats.promedioTicket.toFixed(2)}`} color="text-gray-800" />
+        <Card icon="📈" label="Ocupación máxima" value={`${stats.ocupacionMaxima.toFixed(0)}%`} color="text-red-500" />
       </div>
 
-      {/* Placeholder para gráficos */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-500 mb-4">Gráficos de ocupación e ingresos</h2>
-        <div className="h-64 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
-          {/* Aquí se puede integrar Chart.js, Recharts u otra librería */}
-          Gráfico de ejemplo
+      {/* ---- Gráfico ---- */}
+      {stats.resumen7dias && (
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <h2 className="text-lg font-semibold text-gray-500 mb-4">Ingresos últimos 7 días</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={stats.resumen7dias}>
+                <Line type="monotone" dataKey="ingresos" stroke="#4F46E5" strokeWidth={3}/>
+                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                <XAxis dataKey="dia" />
+                <YAxis />
+                <Tooltip />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Tabla de resumen histórico */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-500 mb-4">Resumen histórico (últimos 7 días)</h2>
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="py-2 text-sm text-gray-500">Día</th>
-              <th className="py-2 text-sm text-gray-500">Vehículos</th>
-              <th className="py-2 text-sm text-gray-500">Ingresos</th>
-              <th className="py-2 text-sm text-gray-500">Ocupación</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              { dia: "Lunes", vehiculos: 180, ingresos: "$4,100", ocupacion: "80%" },
-              { dia: "Martes", vehiculos: 200, ingresos: "$4,500", ocupacion: "85%" },
-              { dia: "Miércoles", vehiculos: 220, ingresos: "$5,200", ocupacion: "90%" },
-              { dia: "Jueves", vehiculos: 210, ingresos: "$4,900", ocupacion: "88%" },
-              { dia: "Viernes", vehiculos: 230, ingresos: "$5,400", ocupacion: "92%" },
-              { dia: "Sábado", vehiculos: 250, ingresos: "$5,800", ocupacion: "95%" },
-              { dia: "Domingo", vehiculos: 190, ingresos: "$4,300", ocupacion: "82%" },
-            ].map((row) => (
-              <tr key={row.dia} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-2 text-gray-700">{row.dia}</td>
-                <td className="py-2 text-gray-700">{row.vehiculos}</td>
-                <td className="py-2 text-green-500 font-semibold">{row.ingresos}</td>
-                <td className="py-2 text-gray-700">{row.ocupacion}</td>
+      {/* ---- Tabla ---- */}
+      {stats.resumen7dias && (
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <h2 className="text-lg font-semibold text-gray-500 mb-4">Resumen histórico (últimos 7 días)</h2>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="py-2 text-sm text-gray-500">Día</th>
+                <th className="py-2 text-sm text-gray-500">Vehículos</th>
+                <th className="py-2 text-sm text-gray-500">Ingresos</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {stats.resumen7dias.map((row) => (
+                <tr key={row.dia} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-2 text-gray-700">{row.dia}</td>
+                  <td className="py-2 text-gray-700">{row.vehiculos}</td>
+                  <td className="py-2 text-green-500 font-semibold">${row.ingresos}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Card({ icon, label, value, color }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
+      <span className="text-3xl">{icon}</span>
+      <p className="mt-2 text-gray-500 text-sm">{label}</p>
+      <p className={`text-2xl font-bold ${color}`}>{value}</p>
     </div>
   );
 }

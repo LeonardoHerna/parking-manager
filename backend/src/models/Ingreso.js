@@ -23,6 +23,7 @@ const ingresoSchema = new mongoose.Schema({
   },
   horaSalida: {
     type: Date,
+   
   },
   monto: {
     type: Number,

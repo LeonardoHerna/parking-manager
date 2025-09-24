@@ -147,7 +147,7 @@ export default function Clientes() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 overflow-x-auto">
-        <table className="w-full text-left min-w-[1300px]">
+        <table className="w-full text-center min-w-[1300px]">
           <thead>
             <tr className="border-b border-gray-200">
               <th className="py-2 text-sm text-gray-500">Nombre</th>
@@ -186,22 +186,22 @@ export default function Clientes() {
                     <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Inactivo</span>
                   )}
                 </td>
-                <td className="py-2 flex gap-2">
+                <td className="py-2 flex gap-2 px-2">
                   <button
                     onClick={() => openDetailModal(c)}
-                    className="text-blue-500 hover:underline text-sm"
+                    className="text-blue-500 hover:underline text-sm px-1"
                   >
                     Detalles
                   </button>
                   <button
                     onClick={() => openEditModal(c)}
-                    className="text-indigo-500 hover:underline text-sm"
+                    className="text-indigo-500 hover:underline text-sm px-1"
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => handleDelete(c._id)}
-                    className="text-red-500 hover:underline text-sm"
+                    className="text-red-500 hover:underline text-sm px-1"
                   >
                     Eliminar
                   </button>

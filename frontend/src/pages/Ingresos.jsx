@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "../pages/Modal";
+import Tickets from "../pages/Ticket"; // ✅ NUEVA IMPORTACIÓN
 
 export default function Ingresos() {
   const [ingresos, setIngresos] = useState([]);
@@ -15,12 +16,16 @@ export default function Ingresos() {
     monto: 0,
   });
 
-  // 🔹 Notificar al dashboard que los ingresos cambiaron
+
+
+  // ✅ Ticket seleccionado
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [selectedIngreso, setSelectedIngreso] = useState(null);
+
   const notifyUpdate = () => {
     window.dispatchEvent(new Event("ingresos:update"));
   };
 
-  // ✅ Obtener ingresos
   const fetchIngresos = async () => {
     try {
       const { data } = await axios.get("http://localhost:4000/api/ingresos");
@@ -34,7 +39,6 @@ export default function Ingresos() {
     fetchIngresos();
   }, []);
 
-  // ✅ Abrir modal para agregar
   const openAddModal = () => {
     setForm({
       patente: "",
@@ -48,7 +52,6 @@ export default function Ingresos() {
     setModalOpen(true);
   };
 
-  // ✅ Abrir modal para editar
   const openEditModal = (ingreso) => {
     const fecha = new Date(ingreso.horaEntrada);
     setForm({
@@ -63,7 +66,6 @@ export default function Ingresos() {
     setModalOpen(true);
   };
 
-  // ✅ Guardar cambios (alta o modificación)
   const handleSubmit = async () => {
     try {
       const horaEntradaCompleta = new Date(
@@ -95,39 +97,40 @@ export default function Ingresos() {
       }
 
       setModalOpen(false);
-      notifyUpdate(); // 🔔 avisar al dashboard
+      notifyUpdate();
     } catch (error) {
       console.error("Error al guardar ingreso:", error);
     }
   };
 
-  // ✅ Eliminar ingreso
   const eliminarIngreso = async (id) => {
     try {
       await axios.delete(`http://localhost:4000/api/ingresos/${id}`);
       setIngresos((prev) => prev.filter((item) => item._id !== id));
-      notifyUpdate(); // 🔔 avisar al dashboard
+      notifyUpdate();
     } catch (error) {
       console.error("Error al eliminar ingreso:", error);
     }
   };
 
-  // ✅ Marcar salida → usa el endpoint que calcula el monto en backend
   const marcarSalida = async (id) => {
     try {
       const { data } = await axios.put(
         `http://localhost:4000/api/ingresos/${id}/finalizar`
       );
-
-      // Actualizamos en la lista el documento devuelto
       setIngresos((prev) =>
         prev.map((item) => (item._id === id ? data : item))
       );
-
-      notifyUpdate(); // 🔔 avisar al dashboard
+      notifyUpdate();
     } catch (error) {
       console.error("Error al marcar salida:", error);
     }
+  };
+
+  // ✅ Abrir Ticket
+  const openTicket = (ingreso) => {
+    setSelectedIngreso(ingreso);
+    setTicketOpen(true);
   };
 
   return (
@@ -211,6 +214,13 @@ export default function Ingresos() {
                         Marcar salida
                       </button>
                     )}
+                    {/* ✅ NUEVO BOTÓN TICKET */}
+                    <button
+                      className="text-indigo-500 hover:underline"
+                      onClick={() => openTicket(item)}
+                    >
+                      Ticket
+                    </button>
                   </td>
                 </tr>
               );
@@ -225,7 +235,6 @@ export default function Ingresos() {
         </tbody>
       </table>
 
-      {/* Modal para alta/modificación */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -282,6 +291,11 @@ export default function Ingresos() {
           />
         </div>
       </Modal>
+
+      {/* ✅ Modal de Ticket */}
+      {ticketOpen && (
+        <Tickets ingreso={selectedIngreso} onClose={() => setTicketOpen(false)} />
+      )}
     </div>
   );
 }

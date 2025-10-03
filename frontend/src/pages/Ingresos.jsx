@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "../pages/Modal";
-import Tickets from "../pages/Ticket"; // ✅ NUEVA IMPORTACIÓN
+import Tickets from "../pages/Ticket";
+import PaymentModal from "../pages/paymentModal";
 
 export default function Ingresos() {
   const [ingresos, setIngresos] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIngreso, setEditingIngreso] = useState(null);
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [selectedIngreso, setSelectedIngreso] = useState(null);
+  const [payModalOpen, setPayModalOpen] = useState(false); 
+
   const [form, setForm] = useState({
     patente: "",
     tipoVehiculo: "Auto",
@@ -16,15 +21,7 @@ export default function Ingresos() {
     monto: 0,
   });
 
-
-
-  // ✅ Ticket seleccionado
-  const [ticketOpen, setTicketOpen] = useState(false);
-  const [selectedIngreso, setSelectedIngreso] = useState(null);
-
-  const notifyUpdate = () => {
-    window.dispatchEvent(new Event("ingresos:update"));
-  };
+  const notifyUpdate = () => window.dispatchEvent(new Event("ingresos:update"));
 
   const fetchIngresos = async () => {
     try {
@@ -127,7 +124,6 @@ export default function Ingresos() {
     }
   };
 
-  // ✅ Abrir Ticket
   const openTicket = (ingreso) => {
     setSelectedIngreso(ingreso);
     setTicketOpen(true);
@@ -137,12 +133,22 @@ export default function Ingresos() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-800">Ingresos del parking</h1>
 
-      <button
-        onClick={openAddModal}
-        className="bg-indigo-500 text-white py-2 px-4 rounded-2xl hover:bg-indigo-600 transition"
-      >
-        Agregar ingreso
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={openAddModal}
+          className="bg-indigo-500 text-white py-2 px-4 rounded-2xl hover:bg-indigo-600 transition"
+        >
+          Agregar ingreso
+        </button>
+
+        {/* 🔹 BOTÓN para abrir el nuevo modal */}
+        <button
+          onClick={() => setPayModalOpen(true)}
+          className="bg-emerald-500 text-white py-2 px-4 rounded-2xl hover:bg-emerald-600 transition"
+        >
+          Registrar Pago
+        </button>
+      </div>
 
       <table className="w-full text-center mt-4 bg-white rounded-2xl shadow-md">
         <thead>
@@ -214,7 +220,6 @@ export default function Ingresos() {
                         Marcar salida
                       </button>
                     )}
-                    {/* ✅ NUEVO BOTÓN TICKET */}
                     <button
                       className="text-indigo-500 hover:underline"
                       onClick={() => openTicket(item)}
@@ -235,6 +240,7 @@ export default function Ingresos() {
         </tbody>
       </table>
 
+      {/* Modal agregar/editar ingreso */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -270,14 +276,12 @@ export default function Ingresos() {
           </select>
           <input
             type="date"
-            placeholder="Fecha de ingreso"
             value={form.fechaEntrada}
             onChange={(e) => setForm({ ...form, fechaEntrada: e.target.value })}
             className="border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <input
             type="time"
-            placeholder="Hora de ingreso"
             value={form.horaEntrada}
             onChange={(e) => setForm({ ...form, horaEntrada: e.target.value })}
             className="border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
@@ -292,10 +296,17 @@ export default function Ingresos() {
         </div>
       </Modal>
 
-      {/* ✅ Modal de Ticket */}
+      {/* Modal Ticket */}
       {ticketOpen && (
         <Tickets ingreso={selectedIngreso} onClose={() => setTicketOpen(false)} />
       )}
+
+      {/* 🔹 Nuevo Modal de Pago */}
+      <PaymentModal
+        isOpen={payModalOpen}
+        onClose={() => setPayModalOpen(false)}
+        onPaymentSaved={fetchIngresos}
+      />
     </div>
   );
 }

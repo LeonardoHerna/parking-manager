@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "../pages/Modal";
+import HistorialPagos from "../pages/HistorialDePagos";
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
-  const [search, setSearch] = useState("");
 
   // Modal de agregar/editar
   const [modalOpen, setModalOpen] = useState(false);
@@ -15,8 +15,11 @@ export default function Clientes() {
   const [detailModal, setDetailModal] = useState(false);
   const [detailData, setDetailData] = useState(null);
 
-  const [errors, setErrors] = useState({});
+  // Modal de historial de pagos
+  const [historyModal, setHistoryModal] = useState(false);
+  const [selectedCliente, setSelectedCliente] = useState(null);
 
+  const [_errors, setErrors] = useState({});
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
@@ -31,17 +34,17 @@ export default function Clientes() {
   });
 
   // Traer clientes
-  const fetchClientes = async () => {
-    try {
-      const res = await axios.get(`http://localhost:4000/api/clientes?search=${search}`);
-      setClientes(res.data);
-    } catch (err) {
-      console.error("Error cargando clientes:", err);
-    }
-  };
   useEffect(() => {
+    const fetchClientes = async () => {
+      try {
+        const res = await axios.get("http://localhost:4000/api/clientes");
+        setClientes(res.data);
+      } catch (err) {
+        console.error("Error cargando clientes:", err);
+      }
+    };
     fetchClientes();
-  });
+  }, []);
 
   const resetForm = () => {
     setForm({
@@ -89,12 +92,22 @@ export default function Clientes() {
     setDetailModal(true);
   };
 
+  const openHistoryModal = () => {
+    if (!selectedCliente) {
+      alert("Seleccione un cliente para ver su historial de pagos.");
+      return;
+    }
+    setHistoryModal(true);
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!form.nombre.trim()) newErrors.nombre = "Nombre es obligatorio";
     if (!form.apellido.trim()) newErrors.apellido = "Apellido es obligatorio";
-    if (!form.vehiculo.matricula.trim()) newErrors.matricula = "Matrícula es obligatoria";
-    if (!form.cuotaMensual || form.cuotaMensual <= 0) newErrors.cuotaMensual = "Cuota válida requerida";
+    if (!form.vehiculo.matricula.trim())
+      newErrors.matricula = "Matrícula es obligatoria";
+    if (!form.cuotaMensual || form.cuotaMensual <= 0)
+      newErrors.cuotaMensual = "Cuota válida requerida";
     if (!form.cochera) newErrors.cochera = "Número de cochera obligatorio";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -104,10 +117,16 @@ export default function Clientes() {
     if (!validateForm()) return;
     try {
       if (isEditing) {
-        const { data } = await axios.put(`http://localhost:4000/api/clientes/${editId}`, form);
+        const { data } = await axios.put(
+          `http://localhost:4000/api/clientes/${editId}`,
+          form
+        );
         setClientes((prev) => prev.map((x) => (x._id === editId ? data : x)));
       } else {
-        const { data } = await axios.post("http://localhost:4000/api/clientes", form);
+        const { data } = await axios.post(
+          "http://localhost:4000/api/clientes",
+          form
+        );
         setClientes([data, ...clientes]);
       }
       setModalOpen(false);
@@ -128,24 +147,42 @@ export default function Clientes() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">Clientes / Cocheras fijas</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-4">
+        Clientes / Cocheras fijas
+      </h1>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <input
-          type="text"
-          placeholder="Buscar por nombre o patente..."
-          className="border rounded-xl px-4 py-2 w-full sm:w-1/2"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="flex gap-3 flex-wrap">
         <button
           onClick={openAddModal}
           className="bg-indigo-500 text-white py-2 px-4 rounded-2xl hover:bg-indigo-600 transition"
         >
           Agregar Cliente
         </button>
+
+        <select
+          className="border rounded-xl px-4 py-2"
+          value={selectedCliente?._id || ""}
+          onChange={(e) =>
+            setSelectedCliente(clientes.find((c) => c._id === e.target.value))
+          }
+        >
+          <option value="">Seleccionar cliente</option>
+          {clientes.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.nombre} {c.apellido} - {c.vehiculo.matricula}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={openHistoryModal}
+          className="bg-emerald-500 text-white py-2 px-4 rounded-2xl hover:bg-emerald-600 transition"
+        >
+          Historial de Pagos
+        </button>
       </div>
 
+      {/* Tabla de clientes */}
       <div className="bg-white rounded-2xl shadow-md p-6 overflow-x-auto">
         <table className="w-full text-center min-w-[1300px]">
           <thead>
@@ -167,7 +204,10 @@ export default function Clientes() {
           </thead>
           <tbody>
             {clientes.map((c) => (
-              <tr key={c._id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr
+                key={c._id}
+                className="border-b border-gray-100 hover:bg-gray-50"
+              >
                 <td className="py-2">{c.nombre}</td>
                 <td className="py-2">{c.apellido}</td>
                 <td className="py-2">{c.telefono}</td>
@@ -181,9 +221,13 @@ export default function Clientes() {
                 <td className="py-2">{c.formaPago}</td>
                 <td className="py-2">
                   {c.activo ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Activo</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                      Activo
+                    </span>
                   ) : (
-                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Inactivo</span>
+                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
+                      Inactivo
+                    </span>
                   )}
                 </td>
                 <td className="py-2 flex gap-2 px-2">
@@ -220,53 +264,132 @@ export default function Clientes() {
         onSubmit={handleSubmit}
         modalClassName="max-w-[1400px] w-full p-4"
       >
-        <div className="flex flex-col md:flex-row gap-6 h-[70vh] w-full overflow-y-auto">
-          {/* Columna izquierda */}
-          <div className="flex flex-col flex-1 gap-3">
-            <input type="text" placeholder="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            {errors.nombre && <p className="text-red-500 text-xs">{errors.nombre}</p>}
-            <input type="text" placeholder="Apellido" value={form.apellido} onChange={(e) => setForm({ ...form, apellido: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            {errors.apellido && <p className="text-red-500 text-xs">{errors.apellido}</p>}
-            <input type="text" placeholder="Dirección" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            <input type="text" placeholder="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              className="border rounded-xl p-2 w-1/2"
+            />
+            <input
+              type="text"
+              placeholder="Apellido"
+              value={form.apellido}
+              onChange={(e) => setForm({ ...form, apellido: e.target.value })}
+              className="border rounded-xl p-2 w-1/2"
+            />
           </div>
 
-          {/* Columna central */}
-          <div className="flex flex-col flex-1 gap-3">
-            <input type="text" placeholder="Matrícula" value={form.vehiculo.matricula} onChange={(e) => setForm({ ...form, vehiculo: { ...form.vehiculo, matricula: e.target.value } })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            {errors.matricula && <p className="text-red-500 text-xs">{errors.matricula}</p>}
-            <select value={form.vehiculo.tipo} onChange={(e) => setForm({ ...form, vehiculo: { ...form.vehiculo, tipo: e.target.value } })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full">
+          <input
+            type="text"
+            placeholder="Dirección"
+            value={form.direccion}
+            onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+            className="border rounded-xl p-2 w-full"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="border rounded-xl p-2 w-full"
+          />
+          <input
+            type="tel"
+            placeholder="Teléfono"
+            value={form.telefono}
+            onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+            className="border rounded-xl p-2 w-full"
+          />
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Matrícula"
+              value={form.vehiculo.matricula}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  vehiculo: { ...form.vehiculo, matricula: e.target.value },
+                })
+              }
+              className="border rounded-xl p-2 w-1/3"
+            />
+            <input
+              type="text"
+              placeholder="Modelo"
+              value={form.vehiculo.modelo}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  vehiculo: { ...form.vehiculo, modelo: e.target.value },
+                })
+              }
+              className="border rounded-xl p-2 w-1/3"
+            />
+            <select
+              value={form.vehiculo.tipo}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  vehiculo: { ...form.vehiculo, tipo: e.target.value },
+                })
+              }
+              className="border rounded-xl p-2 w-1/3"
+            >
               <option>Auto</option>
               <option>Camioneta</option>
               <option>Moto</option>
               <option>Bici</option>
             </select>
-            <input type="text" placeholder="Modelo" value={form.vehiculo.modelo} onChange={(e) => setForm({ ...form, vehiculo: { ...form.vehiculo, modelo: e.target.value } })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
           </div>
 
-          {/* Columna derecha */}
-          <div className="flex flex-col flex-1 gap-3">
-            <select value={form.piso} onChange={(e) => setForm({ ...form, piso: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full">
+          <div className="flex gap-2">
+            <select
+              value={form.piso}
+              onChange={(e) => setForm({ ...form, piso: e.target.value })}
+              className="border rounded-xl p-2 w-1/2"
+            >
               <option>PB</option>
               <option>1</option>
               <option>2</option>
               <option>3</option>
             </select>
-            <input type="number" placeholder="Número de cochera" value={form.cochera} onChange={(e) => setForm({ ...form, cochera: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            {errors.cochera && <p className="text-red-500 text-xs">{errors.cochera}</p>}
-            <input type="number" placeholder="Cuota mensual" value={form.cuotaMensual} onChange={(e) => setForm({ ...form, cuotaMensual: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full" />
-            {errors.cuotaMensual && <p className="text-red-500 text-xs">{errors.cuotaMensual}</p>}
-            <select value={form.formaPago} onChange={(e) => setForm({ ...form, formaPago: e.target.value })} className="border rounded-xl p-2 focus:ring-2 focus:ring-indigo-400 w-full">
+            <input
+              type="text"
+              placeholder="Cochera"
+              value={form.cochera}
+              onChange={(e) => setForm({ ...form, cochera: e.target.value })}
+              className="border rounded-xl p-2 w-1/2"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Cuota Mensual"
+              value={form.cuotaMensual}
+              onChange={(e) =>
+                setForm({ ...form, cuotaMensual: e.target.value })
+              }
+              className="border rounded-xl p-2 w-1/2"
+            />
+            <select
+              value={form.formaPago}
+              onChange={(e) => setForm({ ...form, formaPago: e.target.value })}
+              className="border rounded-xl p-2 w-1/2"
+            >
               <option>Efectivo</option>
               <option>Tarjeta</option>
-              <option>Débito automático</option>
+              <option>Transferencia</option>
             </select>
           </div>
         </div>
       </Modal>
 
-      {/* Modal de Detalles */}
+      {/* Modal Detalles */}
       <Modal
         isOpen={detailModal}
         onClose={() => setDetailModal(false)}
@@ -275,17 +398,54 @@ export default function Clientes() {
       >
         {detailData && (
           <div className="space-y-2 text-sm">
-            <p><strong>Nombre:</strong> {detailData.nombre} {detailData.apellido}</p>
-            <p><strong>Email:</strong> {detailData.email}</p>
-            <p><strong>Teléfono:</strong> {detailData.telefono}</p>
-            <p><strong>Dirección:</strong> {detailData.direccion}</p>
-            <p><strong>Matrícula:</strong> {detailData.vehiculo.matricula}</p>
-            <p><strong>Modelo:</strong> {detailData.vehiculo.modelo}</p>
-            <p><strong>Cochera:</strong> Piso {detailData.piso} / N° {detailData.cochera}</p>
-            <p><strong>Cuota:</strong> ${detailData.cuotaMensual}</p>
-            <p><strong>Forma de pago:</strong> {detailData.formaPago}</p>
-            <p><strong>Estado:</strong> {detailData.activo ? "Activo" : "Inactivo"}</p>
+            <p>
+              <strong>Nombre:</strong> {detailData.nombre} {detailData.apellido}
+            </p>
+            <p>
+              <strong>Email:</strong> {detailData.email}
+            </p>
+            <p>
+              <strong>Teléfono:</strong> {detailData.telefono}
+            </p>
+            <p>
+              <strong>Dirección:</strong> {detailData.direccion}
+            </p>
+            <p>
+              <strong>Matrícula:</strong> {detailData.vehiculo.matricula}
+            </p>
+            <p>
+              <strong>Modelo:</strong> {detailData.vehiculo.modelo}
+            </p>
+            <p>
+              <strong>Cochera:</strong> Piso {detailData.piso} / N°{" "}
+              {detailData.cochera}
+            </p>
+            <p>
+              <strong>Cuota:</strong> ${detailData.cuotaMensual}
+            </p>
+            <p>
+              <strong>Forma de pago:</strong> {detailData.formaPago}
+            </p>
+            <p>
+              <strong>Estado:</strong> {detailData.activo ? "Activo" : "Inactivo"}
+            </p>
           </div>
+        )}
+      </Modal>
+
+      {/* Modal Historial Pagos */}
+      <Modal
+        isOpen={historyModal}
+        onClose={() => setHistoryModal(false)}
+        title="Historial de Pagos"
+        hideActions
+        modalClassName="max-w-[800px] w-full p-4"
+      >
+        {selectedCliente && (
+          <HistorialPagos
+            clienteId={selectedCliente._id}
+            onClose={() => setHistoryModal(false)}
+          />
         )}
       </Modal>
     </div>

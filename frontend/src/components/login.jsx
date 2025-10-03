@@ -1,8 +1,23 @@
 import { useState } from "react";
+import axios from "axios";
 
 export default function Login({ onLogin, onGoToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await axios.post("http://localhost:4000/api/auth/login", {
+        email,
+        password,
+      });
+      onLogin(data); // Pasamos los datos (usuario y token) al padre
+    } catch (err) {
+      setError(err.response?.data?.message || "Error en el login");
+    }
+  };
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-purple-50 to-purple-100">
@@ -14,13 +29,7 @@ export default function Login({ onLogin, onGoToRegister }) {
         </div>
 
         {/* Formulario */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onLogin({ email, password });
-          }}
-          className="flex flex-col space-y-4"
-        >
+        <form onSubmit={handleLogin} className="flex flex-col space-y-4">
           <input
             type="email"
             placeholder="Correo electrónico"
@@ -38,7 +47,8 @@ export default function Login({ onLogin, onGoToRegister }) {
             required
           />
 
-          {/* Botón Ingresar */}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-2xl font-semibold hover:scale-105 transform transition-all duration-200 shadow-md hover:shadow-lg"
@@ -46,7 +56,6 @@ export default function Login({ onLogin, onGoToRegister }) {
             Ingresar
           </button>
 
-          {/* Botón Registrarse */}
           <button
             type="button"
             onClick={onGoToRegister}

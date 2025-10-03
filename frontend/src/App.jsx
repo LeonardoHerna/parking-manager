@@ -7,13 +7,13 @@ export default function App() {
   const [screen, setScreen] = useState("login"); // "login" | "register" | "dashboard"
 
   const handleLogin = (credentials) => {
-    // Aquí iría la lógica de login con backend
+    // Aquí ira la lógica de login con backend
     console.log("Login con:", credentials);
     setScreen("dashboard");
   };
 
   const handleRegister = (data) => {
-    // Aquí iría la lógica de registro con backend
+    // Aquí ira la lógica de registro con backend
     console.log("Registro con:", data);
     setScreen("dashboard");
   };

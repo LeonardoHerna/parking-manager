@@ -1,18 +1,33 @@
 import { useState } from "react";
+import axios from "axios";
 
 export default function Register({ onRegister, onBackToLogin }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
+      setError("Las contraseñas no coinciden");
       return;
     }
-    onRegister && onRegister({ name, email, password });
+
+    try {
+      const { data } = await axios.post("http://localhost:4000/api/auth/register", {
+        name,
+        email,
+        password,
+      });
+
+      // Si todo sale bien, pasamos el usuario/token al padre
+      onRegister && onRegister(data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Error al registrar usuario");
+    }
   };
 
   return (
@@ -58,6 +73,8 @@ export default function Register({ onRegister, onBackToLogin }) {
             className="border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
           />
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           {/* Botón Registrar */}
           <button

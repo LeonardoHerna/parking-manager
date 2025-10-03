@@ -19,6 +19,37 @@ const ClienteSchema = new mongoose.Schema({
   formaPago: { type: String, enum: ["Efectivo", "Tarjeta", "Débito automático"], default: "Efectivo" },
   fechaPago: Date,                     // último pago realizado
   activo: { type: Boolean, default: true },
+
+  // 🔹 Historial general de pagos (ya existente)
+  historialPagos: [
+    {
+      fecha: { type: Date, default: Date.now },
+      monto: { type: Number, required: true },
+      concepto: { 
+        type: String,
+        enum: ["Abono Mensual", "Ticket Diario", "Otro"],
+        default: "Abono Mensual"
+      },
+      metodo: { 
+        type: String,
+        enum: ["Efectivo", "Tarjeta", "Transferencia"],
+        default: "Efectivo"
+      }
+    }
+  ],
+
+  // 🔹 NUEVO: Pagos específicos para el componente ClientesPagos
+  clientesPagos: [
+    {
+      fecha: { type: Date, default: Date.now },
+      monto: { type: Number, required: true },
+      mes: { type: String, required: true },          // ejemplo: "Septiembre"
+      anio: { type: Number, required: true },         // ejemplo: 2025
+      metodo: { type: String, enum: ["Efectivo", "Tarjeta", "Transferencia"], default: "Efectivo" },
+      observacion: { type: String }                   // campo opcional
+    }
+  ]
+
 }, { timestamps: true });
 
 export default mongoose.model("Cliente", ClienteSchema);

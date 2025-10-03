@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { io } from "socket.io-client"; // 👈 Importar Socket.IO cliente
+import { io } from "socket.io-client";
 import Estado from "../pages/Estado";
 import Ingresos from "../pages/Ingresos";
 import Reportes from "../pages/Reportes";
@@ -10,7 +10,7 @@ import Clientes from "../pages/Clientes";
 export default function Dashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [ultimasOps, setUltimasOps] = useState([]);
-
+  const CAPACIDAD_TOTAL = 60; // Dato ficticio
   // 🔹 Función para traer ingresos desde el backend
   const fetchIngresos = async () => {
     try {
@@ -51,17 +51,22 @@ export default function Dashboard({ onLogout }) {
       fetchIngresos();
     });
 
+    
+
     // Limpieza al desmontar
     return () => socket.disconnect();
   }, []);
 
   const tarifas = [
-    { tipo: "Bicicleta", hora: "$20", noche: "$100", dia: "$150", mes: "$1500" },
-    { tipo: "Moto", hora: "$40", noche: "$200", dia: "$300", mes: "$3000" },
-    { tipo: "Auto", hora: "$60", noche: "$300", dia: "$450", mes: "$4500" },
-    { tipo: "Camioneta", hora: "$80", noche: "$400", dia: "$600", mes: "$6000" },
+    { tipo: "Bicicleta", hora: "$50", noche: "$150", dia: "$250", mes: "$1500" },
+    { tipo: "Moto", hora: "$160", noche: "$200", dia: "$300", mes: "$3000" },
+    { tipo: "Auto", hora: "$160", noche: "$370", dia: "$470", mes: "$4200" },
+    { tipo: "Camioneta", hora: "$160", noche: "$470", dia: "$570", mes: "$5200" },
   ];
 
+  const libres = CAPACIDAD_TOTAL - ultimasOps.length;
+
+  
   const renderSection = () => {
     switch (activeSection) {
       case "Dashboard":
@@ -71,11 +76,11 @@ export default function Dashboard({ onLogout }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6 flex flex-col justify-between">
                 <h2 className="text-lg font-semibold text-gray-500 mb-4 text-center">Lugares libres</h2>
-                <p className="text-6xl font-bold text-green-500 text-center">45</p>
+                <p className="text-6xl font-bold text-green-500 text-center">{libres}</p>
               </div>
               <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6 flex flex-col justify-between">
                 <h2 className="text-lg font-semibold text-gray-500 mb-4 text-center">Lugares ocupados</h2>
-                <p className="text-6xl font-bold text-red-500 text-center">15</p>
+                <p className="text-6xl font-bold text-red-500 text-center">{ultimasOps.length}</p>
               </div>
               <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6 flex flex-col justify-between">
                 <h2 className="text-lg font-semibold text-gray-500 mb-4 text-center">Últimos ingresos</h2>

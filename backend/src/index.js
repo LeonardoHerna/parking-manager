@@ -7,6 +7,9 @@ import { Server as SocketIOServer } from "socket.io"; // importar socket.io
 import ingresoRoutes from "./routes/IngresoRoutes.js";
 import reportesRouter from "./routes/Reportes.js";
 import clientesRoutes from "./routes/Clientes.js";
+import ClientesPagosRoutes from "./routes/ClientesPagos.js";
+import authRoutes from "./routes/AuthRoutes.js";
+
 
 dotenv.config();
 
@@ -43,6 +46,8 @@ app.use((req, res, next) => {
 app.use("/api/reportes", reportesRouter);
 app.use("/api/ingresos", ingresoRoutes);
 app.use("/api/clientes", clientesRoutes);
+app.use("/api",ClientesPagosRoutes );
+app.use("/api/auth", authRoutes);
 
 // Conexión a MongoDB y levantar servidor
 mongoose.connect(process.env.MONGO_URI)

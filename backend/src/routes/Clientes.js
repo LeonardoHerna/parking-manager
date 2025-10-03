@@ -1,7 +1,11 @@
 import express from "express";
 import Cliente from "../models/Clientes.js"; 
 
+
 const router = express.Router();
+
+
+
 
 // 🔹 Listado con filtros opcionales (por nombre, apellido o matrícula)
 router.get("/", async (req, res) => {

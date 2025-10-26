@@ -9,7 +9,8 @@ import reportesRouter from "./routes/Reportes.js";
 import clientesRoutes from "./routes/Clientes.js";
 import ClientesPagosRoutes from "./routes/ClientesPagos.js";
 import authRoutes from "./routes/AuthRoutes.js";
-
+import configRoutes from "./routes/ConfigRoutes.js"
+import tarifasRoutes from "./routes/TarifasRoutes.js";
 
 dotenv.config();
 
@@ -48,6 +49,9 @@ app.use("/api/ingresos", ingresoRoutes);
 app.use("/api/clientes", clientesRoutes);
 app.use("/api",ClientesPagosRoutes );
 app.use("/api/auth", authRoutes);
+app.use("/api/config", configRoutes);
+app.use("/api/tarifas", tarifasRoutes);
+
 
 // Conexión a MongoDB y levantar servidor
 mongoose.connect(process.env.MONGO_URI)

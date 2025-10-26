@@ -1,5 +1,5 @@
 import Ingreso from "../models/Ingreso.js";
-import { calcularMonto } from "../utils/calcularMonto.js";
+import { calcularMonto } from "../utils/CalcularMonto.js";
 
 // Crear nuevo ingreso
 export const crearIngreso = async (req, res) => {
@@ -30,7 +30,6 @@ export const modificarIngreso = async (req, res) => {
     const ingreso = await Ingreso.findById(id);
     if (!ingreso) return res.status(404).json({ message: "Ingreso no encontrado" });
 
-    // Actualizamos los campos permitidos
     ingreso.patente = req.body.patente ?? ingreso.patente;
     ingreso.tipoVehiculo = req.body.tipoVehiculo ?? ingreso.tipoVehiculo;
     ingreso.servicio = req.body.servicio ?? ingreso.servicio;
@@ -53,7 +52,10 @@ export const finalizarIngreso = async (req, res) => {
 
     ingreso.horaSalida = new Date();
     ingreso.estado = "Finalizado";
-    ingreso.monto = calcularMonto(ingreso.horaEntrada, ingreso.horaSalida, ingreso.servicio);
+
+    // 🔹 Esperar correctamente el cálculo del monto
+    ingreso.monto = await calcularMonto(ingreso.horaEntrada, ingreso.horaSalida, ingreso.servicio);
+
     await ingreso.save();
     res.json(ingreso);
   } catch (error) {
@@ -62,12 +64,11 @@ export const finalizarIngreso = async (req, res) => {
 };
 
 // Eliminar ingreso
-export const eliminarIngreso = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await Ingreso.findByIdAndDelete(id);
-    res.json({ message: "Ingreso eliminado" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+export const eliminarIngreso = async (req) => {
+  const { id } = req.params;
+  const eliminado = await Ingreso.findByIdAndDelete(id);
+  if (!eliminado) {
+    throw new Error("Ingreso no encontrado");
   }
+  return eliminado;
 };

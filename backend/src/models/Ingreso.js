@@ -14,7 +14,7 @@ const ingresoSchema = new mongoose.Schema({
   },
   servicio: {
     type: String,
-    enum: ["Hora", "Día", "Mensual"],
+    enum: ["Hora", "Día","Semana","Quincena","Mensual"],
     required: true,
   },
   horaEntrada: {

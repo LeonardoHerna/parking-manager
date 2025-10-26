@@ -7,7 +7,7 @@ import {
   eliminarIngreso,
 } from "../controllers/ingresoController.js";
 
-import { calcularMonto } from "../utils/calcularMonto.js"; // importa tu función
+import { calcularMonto } from "../utils/CalcularMonto.js"; // importa tu función
 
 const router = express.Router();
 
@@ -48,7 +48,6 @@ router.put("/:id/finalizar", async (req, res) => {
   try {
     const ingreso = await finalizarIngresoController(req, res); // tu función original
 
-    // Si tu función `finalizarIngresoController` no calcula monto, lo hacemos aquí:
     if (!ingreso.monto) {
       ingreso.monto = calcularMonto(
         new Date(ingreso.horaEntrada),
@@ -72,15 +71,16 @@ router.put("/:id/finalizar", async (req, res) => {
 // Eliminar ingreso
 router.delete("/:id", async (req, res) => {
   try {
-    const eliminado = await eliminarIngreso(req, res);
+    const eliminado = await eliminarIngreso(req);
 
     // Emitir evento de eliminación
     req.io?.emit("ingresoEliminado", req.params.id);
 
-    res.json(eliminado);
+    res.json({ message: "Ingreso eliminado correctamente", eliminado });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 export default router;

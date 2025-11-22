@@ -10,7 +10,8 @@ export default function Ingresos() {
   const [editingIngreso, setEditingIngreso] = useState(null);
   const [ticketOpen, setTicketOpen] = useState(false);
   const [selectedIngreso, setSelectedIngreso] = useState(null);
-  const [payModalOpen, setPayModalOpen] = useState(false); 
+  const [payModalOpen, setPayModalOpen] = useState(false);
+  const [tarifas, setTarifas] = useState([]);
 
   const [form, setForm] = useState({
     patente: "",
@@ -32,18 +33,29 @@ export default function Ingresos() {
     }
   };
 
+  const fetchTarifas = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:4000/api/tarifas");
+      setTarifas(data);
+    } catch (error) {
+      console.error("Error al obtener tarifas:", error);
+    }
+  };
+
   useEffect(() => {
     fetchIngresos();
+    fetchTarifas();
   }, []);
 
   const openAddModal = () => {
+    const tarifaHora = tarifas.find((t) => t.servicio === "Hora");
     setForm({
       patente: "",
       tipoVehiculo: "Auto",
       servicio: "Hora",
       fechaEntrada: "",
       horaEntrada: "",
-      monto: 0,
+      monto: tarifaHora ? Number(tarifaHora.monto) : 0,
     });
     setEditingIngreso(null);
     setModalOpen(true);
@@ -57,7 +69,7 @@ export default function Ingresos() {
       servicio: ingreso.servicio,
       fechaEntrada: fecha.toISOString().slice(0, 10),
       horaEntrada: fecha.toTimeString().slice(0, 5),
-      monto: ingreso.monto,
+      monto: Number(ingreso.monto) || 0,
     });
     setEditingIngreso(ingreso);
     setModalOpen(true);
@@ -69,12 +81,23 @@ export default function Ingresos() {
         `${form.fechaEntrada}T${form.horaEntrada}`
       );
 
+      // 🔹 Buscar tarifa correspondiente
+      const tarifaSeleccionada = tarifas.find(
+        (t) => t.servicio === form.servicio
+      );
+      const montoTarifa = tarifaSeleccionada ? Number(tarifaSeleccionada.monto) : 0;
+
+      if (isNaN(montoTarifa) || montoTarifa <= 0) {
+        alert("Error: Monto inválido o tarifa no encontrada.");
+        return;
+      }
+
       const payload = {
         patente: form.patente.toUpperCase(),
         tipoVehiculo: form.tipoVehiculo,
         servicio: form.servicio,
         horaEntrada: horaEntradaCompleta,
-        monto: Number(form.monto),
+        monto: montoTarifa,
       };
 
       if (editingIngreso) {
@@ -97,6 +120,7 @@ export default function Ingresos() {
       notifyUpdate();
     } catch (error) {
       console.error("Error al guardar ingreso:", error);
+      alert("Hubo un problema al guardar el ingreso.");
     }
   };
 
@@ -141,7 +165,6 @@ export default function Ingresos() {
           Agregar ingreso
         </button>
 
-        {/* 🔹 BOTÓN para abrir el nuevo modal */}
         <button
           onClick={() => setPayModalOpen(true)}
           className="bg-emerald-500 text-white py-2 px-4 rounded-2xl hover:bg-emerald-600 transition"
@@ -255,6 +278,7 @@ export default function Ingresos() {
             onChange={(e) => setForm({ ...form, patente: e.target.value })}
             className="border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+
           <select
             value={form.tipoVehiculo}
             onChange={(e) => setForm({ ...form, tipoVehiculo: e.target.value })}
@@ -265,15 +289,29 @@ export default function Ingresos() {
             <option>Moto</option>
             <option>Bici</option>
           </select>
+
+          {/* Select de servicio con tarifas dinámicas */}
           <select
-            value={form.servicio}
-            onChange={(e) => setForm({ ...form, servicio: e.target.value })}
+            value={form.servicio || "Hora"}
+            onChange={(e) => {
+              const nuevoServicio = e.target.value;
+              const tarifa = tarifas.find((t) => t.servicio === nuevoServicio);
+              setForm({
+                ...form,
+                servicio: nuevoServicio,
+                monto: tarifa ? Number(tarifa.monto) : 0,
+              });
+            }}
             className="border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
-            <option>Hora</option>
-            <option>Día</option>
-            <option>Mensual</option>
+            <option value="">Seleccione servicio...</option>
+            {tarifas.map((t) => (
+              <option key={t.servicio} value={t.servicio}>
+                {t.servicio} — ${t.monto}
+              </option>
+            ))}
           </select>
+
           <input
             type="date"
             value={form.fechaEntrada}
@@ -286,22 +324,22 @@ export default function Ingresos() {
             onChange={(e) => setForm({ ...form, horaEntrada: e.target.value })}
             className="border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+
+          {/* Campo de monto solo lectura */}
           <input
             type="number"
-            placeholder="Monto (opcional)"
+            placeholder="Monto"
             value={form.monto}
-            onChange={(e) => setForm({ ...form, monto: e.target.value })}
-            className="border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            readOnly
+            className="border border-gray-300 rounded-xl p-2 bg-gray-100 text-gray-600 focus:outline-none"
           />
         </div>
       </Modal>
 
-      {/* Modal Ticket */}
       {ticketOpen && (
         <Tickets ingreso={selectedIngreso} onClose={() => setTicketOpen(false)} />
       )}
 
-      {/* 🔹 Nuevo Modal de Pago */}
       <PaymentModal
         isOpen={payModalOpen}
         onClose={() => setPayModalOpen(false)}
@@ -310,3 +348,5 @@ export default function Ingresos() {
     </div>
   );
 }
+
+

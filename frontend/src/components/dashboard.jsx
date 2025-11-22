@@ -11,6 +11,7 @@ export default function Dashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [ultimasOps, setUltimasOps] = useState([]);
   const CAPACIDAD_TOTAL = 60; // Dato ficticio
+  
   // 🔹 Función para traer ingresos desde el backend
   const fetchIngresos = async () => {
     try {

@@ -11,7 +11,7 @@ import Clientes from "../pages/Clientes";
 export default function Dashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [ultimasOps, setUltimasOps] = useState([]);
-HEAD
+
   const CAPACIDAD_TOTAL = 60; // Dato ficticio
   
   // 🔹 Función para traer ingresos desde el backend
@@ -19,7 +19,6 @@ HEAD
   const API_URL = import.meta.env.VITE_API_URL;
 
   // 🔹 Traer ingresos del backend
->>>>>>> bde4481 (Cambios en comunicacion con backend)
   const fetchIngresos = async () => {
     try {
       const { data } = await axios.get(`${API_URL}/api/ingresos`);

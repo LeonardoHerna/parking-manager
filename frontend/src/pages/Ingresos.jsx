@@ -3,6 +3,7 @@ import axios from "axios";
 import Modal from "../pages/Modal";
 import Tickets from "../pages/Ticket";
 import PaymentModal from "../pages/paymentModal";
+import { API_URL } from "../config";
 
 export default function Ingresos() {
   const [ingresos, setIngresos] = useState([]);
@@ -12,6 +13,7 @@ export default function Ingresos() {
   const [selectedIngreso, setSelectedIngreso] = useState(null);
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [tarifas, setTarifas] = useState([]);
+
 
   const [form, setForm] = useState({
     patente: "",
@@ -26,7 +28,7 @@ export default function Ingresos() {
 
   const fetchIngresos = async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/ingresos");
+      const { data } = await axios.get(`${API_URL}/api/ingresos`);
       setIngresos(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al obtener ingresos:", error);
@@ -35,7 +37,7 @@ export default function Ingresos() {
 
   const fetchTarifas = async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/tarifas");
+      const { data } = await axios.get(`${API_URL}/api/tarifas`);
       setTarifas(data);
     } catch (error) {
       console.error("Error al obtener tarifas:", error);
@@ -102,7 +104,7 @@ export default function Ingresos() {
 
       if (editingIngreso) {
         const { data } = await axios.put(
-          `http://localhost:4000/api/ingresos/${editingIngreso._id}`,
+          `${API_URL}/api/ingresos/${editingIngreso._id}`,
           payload
         );
         setIngresos((prev) =>
@@ -110,7 +112,7 @@ export default function Ingresos() {
         );
       } else {
         const { data } = await axios.post(
-          "http://localhost:4000/api/ingresos",
+          `${API_URL}/api/ingresos`,
           payload
         );
         setIngresos((prev) => [data, ...prev]);
@@ -126,7 +128,7 @@ export default function Ingresos() {
 
   const eliminarIngreso = async (id) => {
     try {
-      await axios.delete(`http://localhost:4000/api/ingresos/${id}`);
+      await axios.delete(`${API_URL}/api/ingresos/${id}`);
       setIngresos((prev) => prev.filter((item) => item._id !== id));
       notifyUpdate();
     } catch (error) {
@@ -137,7 +139,7 @@ export default function Ingresos() {
   const marcarSalida = async (id) => {
     try {
       const { data } = await axios.put(
-        `http://localhost:4000/api/ingresos/${id}/finalizar`
+        `${API_URL}/api/ingresos/${id}/finalizar`
       );
       setIngresos((prev) =>
         prev.map((item) => (item._id === id ? data : item))

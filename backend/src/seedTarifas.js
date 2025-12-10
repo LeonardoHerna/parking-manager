@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Tarifa from "./models/Tarifa.js";
 
-const MONGO_URI = "mongodb://127.0.0.1:27017/parkingDB"; 
+const MONGO_URI = process.env.MONGO_URI;
 
 const seedTarifas = async () => {
   try {

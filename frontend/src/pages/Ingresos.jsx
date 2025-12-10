@@ -30,6 +30,7 @@ export default function Ingresos() {
     try {
       const { data } = await axios.get(`${API_URL}/api/ingresos`);
       setIngresos(Array.isArray(data) ? data : []);
+      console.log("API_URL:", API_URL);
     } catch (error) {
       console.error("Error al obtener ingresos:", error);
     }
@@ -141,7 +142,7 @@ export default function Ingresos() {
       const { data } = await axios.put(
         `${API_URL}/api/ingresos/${id}/finalizar`
       );
-      setIngresos((prev) =>
+      setIngresos((prev) => 
         prev.map((item) => (item._id === id ? data : item))
       );
       notifyUpdate();

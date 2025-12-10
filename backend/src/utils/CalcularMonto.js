@@ -1,7 +1,7 @@
 export const calcularMonto = async (horaEntrada, horaSalida, servicio) => {
   try {
     // --- 1️⃣ Obtener tarifas desde tu backend ---
-    const res = await fetch("http://localhost:4000/api/tarifas");
+    const res = await fetch("https://parking-manager-nxr4.onrender.com/api/tarifas");
     if (!res.ok) throw new Error(`Error al obtener tarifas: ${res.status}`);
     const tarifas = await res.json();
 

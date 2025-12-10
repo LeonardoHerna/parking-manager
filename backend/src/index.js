@@ -16,25 +16,34 @@ dotenv.config();
 
 const app = express();
 
-// CORS para desarrollo y producción
+
+const isDev = process.env.NODE_ENV !== "production";
+
+const allowedOrigins = [
+  "http://localhost:5173",  // desarrollo
+];
+
+// Si estás en producción y configuraste FRONTEND_URL en Render, lo agrega
+if (!isDev && process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+console.log("🌍 Allowed origins:", allowedOrigins);
+
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    process.env.FRONTEND_URL
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 
 app.use(express.json());
 
+
 const server = http.createServer(app);
 
 const io = new SocketIOServer(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      process.env.FRONTEND_URL
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
@@ -46,10 +55,12 @@ io.on("connection", (socket) => {
   });
 });
 
+
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
 
 app.use("/api/reportes", reportesRouter);
 app.use("/api/ingresos", ingresoRoutes);
@@ -59,8 +70,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/tarifas", tarifasRoutes);
 
-// ⛔ Ya NO usar puerto fijo
 const PORT = process.env.PORT || 4000;
+
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {

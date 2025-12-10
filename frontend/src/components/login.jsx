@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_URL } from "../config"; // ⬅️ Agregado
 
 export default function Login({ onLogin, onGoToRegister }) {
   const [email, setEmail] = useState("");
@@ -9,11 +10,12 @@ export default function Login({ onLogin, onGoToRegister }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post("http://localhost:4000/api/auth/login", {
+      const { data } = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
       });
-      onLogin(data); // Pasamos los datos (usuario y token) al padre
+
+      onLogin(data);
     } catch (err) {
       setError(err.response?.data?.message || "Error en el login");
     }
@@ -22,6 +24,7 @@ export default function Login({ onLogin, onGoToRegister }) {
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-purple-50 to-purple-100">
       <div className="bg-white shadow-2xl rounded-3xl p-12 w-full max-w-md text-center">
+
         {/* Logo */}
         <div className="mb-8">
           <span className="text-6xl">🚗</span>
@@ -38,6 +41,7 @@ export default function Login({ onLogin, onGoToRegister }) {
             className="border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
           />
+
           <input
             type="password"
             placeholder="Contraseña"

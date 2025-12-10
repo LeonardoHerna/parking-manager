@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "../pages/Modal";
 import HistorialPagos from "../pages/HistorialDePagos";
+import { API_URL } from "../config"; // ⬅️ AGREGADO
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -15,7 +16,7 @@ export default function Clientes() {
   const [detailModal, setDetailModal] = useState(false);
   const [detailData, setDetailData] = useState(null);
 
-  // Modal de historial de pagos
+  // Modal historial pagos
   const [historyModal, setHistoryModal] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
 
@@ -33,11 +34,11 @@ export default function Clientes() {
     formaPago: "Efectivo",
   });
 
-  // Traer clientes
+  // 🔹 Traer clientes
   useEffect(() => {
     const fetchClientes = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/api/clientes");
+        const res = await axios.get(`${API_URL}/api/clientes`);
         setClientes(res.data);
       } catch (err) {
         console.error("Error cargando clientes:", err);
@@ -113,20 +114,19 @@ export default function Clientes() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // 🔹 Crear / Editar cliente
   const handleSubmit = async () => {
     if (!validateForm()) return;
+
     try {
       if (isEditing) {
         const { data } = await axios.put(
-          `http://localhost:4000/api/clientes/${editId}`,
+          `${API_URL}/api/clientes/${editId}`,
           form
         );
         setClientes((prev) => prev.map((x) => (x._id === editId ? data : x)));
       } else {
-        const { data } = await axios.post(
-          "http://localhost:4000/api/clientes",
-          form
-        );
+        const { data } = await axios.post(`${API_URL}/api/clientes`, form);
         setClientes([data, ...clientes]);
       }
       setModalOpen(false);
@@ -135,15 +135,19 @@ export default function Clientes() {
     }
   };
 
+  // 🔹 Eliminar cliente
   const handleDelete = async (id) => {
     if (!window.confirm("¿Eliminar este cliente?")) return;
+
     try {
-      await axios.delete(`http://localhost:4000/api/clientes/${id}`);
+      await axios.delete(`${API_URL}/api/clientes/${id}`);
       setClientes((prev) => prev.filter((c) => c._id !== id));
     } catch (err) {
       console.error("Error eliminando cliente:", err);
     }
   };
+
+  
 
   return (
     <div className="space-y-8">

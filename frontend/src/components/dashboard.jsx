@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
@@ -10,12 +11,18 @@ import Clientes from "../pages/Clientes";
 export default function Dashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [ultimasOps, setUltimasOps] = useState([]);
+HEAD
   const CAPACIDAD_TOTAL = 60; // Dato ficticio
   
   // 🔹 Función para traer ingresos desde el backend
+  // 🔹 URL dinámica (local o Render)
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  // 🔹 Traer ingresos del backend
+>>>>>>> bde4481 (Cambios en comunicacion con backend)
   const fetchIngresos = async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/ingresos");
+      const { data } = await axios.get(`${API_URL}/api/ingresos`);
       const ingresosFiltrados = Array.isArray(data)
         ? data.map((item) => ({
             tipo: item?.tipoVehiculo || "-",
@@ -32,16 +39,14 @@ export default function Dashboard({ onLogout }) {
     }
   };
 
-  // 🔹 Cargar datos iniciales + Suscripción a eventos
+  // 🔹 Cargar datos + conectar sockets
   useEffect(() => {
-    fetchIngresos(); // primera carga
+    fetchIngresos();
 
-    // Conexión a Socket.IO
-    const socket = io("http://localhost:4000", {
+    const socket = io(API_URL, {
       transports: ["websocket"],
     });
 
-    // Escuchar eventos que el backend emita
     socket.on("ingresoActualizado", () => {
       console.log("Evento ingresoActualizado recibido");
       fetchIngresos();
@@ -52,11 +57,8 @@ export default function Dashboard({ onLogout }) {
       fetchIngresos();
     });
 
-    
-
-    // Limpieza al desmontar
     return () => socket.disconnect();
-  }, []);
+  });
 
   const tarifas = [
     { tipo: "Bicicleta", hora: "$50", noche: "$150", dia: "$250", mes: "$1500" },
@@ -67,7 +69,6 @@ export default function Dashboard({ onLogout }) {
 
   const libres = CAPACIDAD_TOTAL - ultimasOps.length;
 
-  
   const renderSection = () => {
     switch (activeSection) {
       case "Dashboard":

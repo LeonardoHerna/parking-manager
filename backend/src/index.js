@@ -23,7 +23,7 @@ const allowedOrigins = [
  "http://localhost:5173",
   "https://leonardoherna.github.io"
 ];
-// Si estás en producción y configuraste FRONTEND_URL en Render, lo agrega
+
 if (!isDev && process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
@@ -44,8 +44,12 @@ const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  }
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
+    transports: ["polling", "websocket"]
+
+  
 });
 
 io.on("connection", (socket) => {

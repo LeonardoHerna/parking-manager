@@ -12,52 +12,60 @@ export default function Dashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [ultimasOps, setUltimasOps] = useState([]);
 
-  const CAPACIDAD_TOTAL = 60; // Dato ficticio
-  
-  // 🔹 Función para traer ingresos desde el backend
-  // 🔹 URL dinámica (local o Render)
+  const CAPACIDAD_TOTAL = 60;
+
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // 🔹 Traer ingresos del backend
-  const fetchIngresos = async () => {
-    try {
-      const { data } = await axios.get(`${API_URL}/api/ingresos`);
-      const ingresosFiltrados = Array.isArray(data)
-        ? data.map((item) => ({
-            tipo: item?.tipoVehiculo || "-",
-            servicio: item?.servicio || "-",
-            horaIngreso: item?.horaEntrada || null,
-            horaEgreso: item?.horaSalida || null,
-            accion: item?.estado || "-",
-          }))
-        : [];
-      setUltimasOps(ingresosFiltrados);
-    } catch (error) {
-      console.error("Error al obtener ingresos:", error);
-      setUltimasOps([]);
-    }
-  };
-
-  // 🔹 Cargar datos + conectar sockets
   useEffect(() => {
+    const fetchIngresos = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/api/ingresos`);
+        const ingresosFiltrados = Array.isArray(data)
+          ? data.map((item) => ({
+              tipo: item?.tipoVehiculo || "-",
+              servicio: item?.servicio || "-",
+              horaIngreso: item?.horaEntrada || null,
+              horaEgreso: item?.horaSalida || null,
+              accion: item?.estado || "-",
+            }))
+          : [];
+        setUltimasOps(ingresosFiltrados);
+      } catch (error) {
+        console.error("Error al obtener ingresos:", error);
+        setUltimasOps([]);
+      }
+    };
+
     fetchIngresos();
 
     const socket = io(API_URL, {
       transports: ["websocket"],
+      reconnectionAttempts: 5,
+    });
+
+    socket.on("connect", () => {
+      console.log("🟢 Socket conectado correctamente");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("🔴 Socket desconectado");
     });
 
     socket.on("ingresoActualizado", () => {
-      console.log("Evento ingresoActualizado recibido");
+      console.log("🔄 Evento ingresoActualizado recibido");
       fetchIngresos();
     });
 
     socket.on("ingresoNuevo", () => {
-      console.log("Evento ingresoNuevo recibido");
+      console.log("🆕 Evento ingresoNuevo recibido");
       fetchIngresos();
     });
 
-    return () => socket.disconnect();
-  });
+    return () => {
+      console.log("🔌 Socket desconectado en cleanup");
+      socket.disconnect();
+    };
+  }, [API_URL]);
 
   const tarifas = [
     { tipo: "Bicicleta", hora: "$50", noche: "$150", dia: "$250", mes: "$1500" },
@@ -73,7 +81,7 @@ export default function Dashboard({ onLogout }) {
       case "Dashboard":
         return (
           <main className="space-y-8">
-            {/* Cards principales */}
+            {/* Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-6 flex flex-col justify-between">
                 <h2 className="text-lg font-semibold text-gray-500 mb-4 text-center">Lugares libres</h2>
@@ -195,9 +203,9 @@ export default function Dashboard({ onLogout }) {
 
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800">
-      {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col border-r border-gray-200">
         <div className="p-6 text-3xl font-bold text-indigo-600">🚗 Parking</div>
+
         <nav className="flex-1 px-4 py-6 space-y-4">
           {[
             { icon: "🏠", label: "Dashboard" },
@@ -221,6 +229,7 @@ export default function Dashboard({ onLogout }) {
             </button>
           ))}
         </nav>
+
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={onLogout}
@@ -231,7 +240,6 @@ export default function Dashboard({ onLogout }) {
         </div>
       </aside>
 
-      {/* Contenido principal */}
       <div className="flex-1 flex flex-col overflow-auto">
         <header className="bg-white shadow-sm px-8 py-4 flex justify-between items-center border-b border-gray-200">
           <h1 className="text-2xl font-semibold">{activeSection}</h1>
@@ -243,6 +251,7 @@ export default function Dashboard({ onLogout }) {
             </div>
           </div>
         </header>
+
         <div className="p-8">{renderSection()}</div>
       </div>
     </div>

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Tarifa from "./models/Tarifa.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI;
 

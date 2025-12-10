@@ -16,7 +16,7 @@ const ClienteSchema = new mongoose.Schema({
   cochera: { type: String },          // número de cochera
   piso: { type: String, enum: ["PB", "1", "2", "3"], default: "PB" },
   cuotaMensual: { type: Number, required: true },
-  formaPago: { type: String, enum: ["Efectivo", "Tarjeta", "Débito automático"], default: "Efectivo" },
+  formaPago: { type: String, enum: ["Efectivo", "Tarjeta", "Transferencia"], default: "Efectivo" },
   fechaPago: Date,                     // último pago realizado
   activo: { type: Boolean, default: true },
 

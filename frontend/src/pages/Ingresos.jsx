@@ -40,6 +40,7 @@ export default function Ingresos() {
     try {
       const { data } = await axios.get(`${API_URL}/api/tarifas`);
       setTarifas(data);
+      console.log(data)
     } catch (error) {
       console.error("Error al obtener tarifas:", error);
     }

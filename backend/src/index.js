@@ -20,9 +20,9 @@ const app = express();
 const isDev = process.env.NODE_ENV !== "production";
 
 const allowedOrigins = [
-  "http://localhost:5173",  // desarrollo
+ "http://localhost:5173",
+  "https://leonardoherna.github.io"
 ];
-
 // Si estás en producción y configuraste FRONTEND_URL en Render, lo agrega
 if (!isDev && process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);

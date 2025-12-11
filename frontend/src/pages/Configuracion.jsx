@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 export default function Configuracion() {
   const [user, setUser] = useState(null);
@@ -11,9 +12,9 @@ export default function Configuracion() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState(null);
 
-  const API_URL = "http://localhost:4000/api/auth";
+  // Normalizar URL
+  const BASE_URL = API_URL.endsWith("/") ? API_URL : `${API_URL}/`;
 
-  
   const applyTheme = (theme) => {
     const root = document.documentElement;
     if (theme === "dark") root.classList.add("dark");
@@ -32,7 +33,7 @@ export default function Configuracion() {
     async function fetchData() {
       try {
         // Obtenemos datos del usuario
-        const userRes = await fetch(`${API_URL}/me`, {
+        const userRes = await fetch(`${BASE_URL}api/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!userRes.ok) throw new Error("No se pudo obtener la información del usuario.");
@@ -40,7 +41,7 @@ export default function Configuracion() {
         setUser(userData);
 
         // Obtenemos preferencias
-        const prefRes = await fetch(`${API_URL}/preferences`, {
+        const prefRes = await fetch(`${BASE_URL}api/preferences`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -61,7 +62,7 @@ export default function Configuracion() {
     }
 
     fetchData();
-  }, []);
+  }, [BASE_URL]);
 
   // 🔄 Manejadores
   const handleChange = (e) => {
@@ -88,7 +89,7 @@ export default function Configuracion() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/preferences`, {
+      const res = await fetch(`${BASE_URL}api/preferences`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -216,7 +217,7 @@ export default function Configuracion() {
               </label>
             </div>
 
-            {/* Visual alerts */}
+            {/* Alertas visuales */}
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm">Alertas visuales</p>
